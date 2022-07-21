@@ -1,12 +1,37 @@
 const Bootcamp = require("../models/Bootcamp")
 const ErrorResponse = require("../utilities/errorResponse")
+const geocoder = require("../utilities/geocoder")
 const asyncHandler = require("../middleware/async")
 
 // description  -- Get All Bootcamps
 // route        -- GET /api/bootcamps
 // access       -- Public
 const getBootcamps = asyncHandler(async (req, res, next) => {
-  const bootcamps = await bootcamps.find()
+  let query
+
+  const requestQuery = { ...req.query }
+
+  const removeFields = ["select", "sort"]
+  removeFields.forEach((param) => delete requestQuery[param])
+
+  let queryStr = JSON.stringify(requestQuery)
+
+  queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, (match) => `$${match}`)
+  query = Bootcamp.find(JSON.parse(queryStr))
+
+  if (req.query.select) {
+    const fields = req.query.select.split(",").join(" ")
+    query = query.select(fields)
+  }
+
+  if (req.query.sort) {
+    const sortBy = req.query.sort.split(",").join(" ")
+    query = query.sort(sortBy)
+  } else {
+    query = query.sort("-createdAt")
+  }
+
+  const bootcamps = await query
   res
     .status(200)
     .json({ suceess: true, count: bootcamps.length, data: bootcamps })
@@ -71,10 +96,31 @@ const deleteBootcamp = asyncHandler(async (req, res, next) => {
   res.status(200).json({ suceess: true, data: {} })
 })
 
+// description  -- Get Bootcamps Within a Radius
+// route        -- GET /api/bootcamps/:zipcode/:distance
+// access       -- Private
+const getBootcampsInRadius = asyncHandler(async (req, res, next) => {
+  const { zipcode, distance } = req.params
+
+  const location = await geocoder.geocode(zipcode)
+  const latitude = location[0].latitude
+  const longitude = location[0].longitude
+
+  const radiusOfEarth = 3963
+
+  const radius = distance / radiusOfEarth
+  const bootcamps = await Bootcamp.find({
+    location: {
+      $geoWithin: { $centerSphere: [[longitude, latitude], radius] },
+    },
+  })
+})
+
 module.exports = {
   getBootcamps: getBootcamps,
   getBootcamp: getBootcamp,
   createBootcamp: createBootcamp,
   updateBootcamp: updateBootcamp,
   deleteBootcamp: deleteBootcamp,
+  getBootcampsInRadius: getBootcampsInRadius,
 }
