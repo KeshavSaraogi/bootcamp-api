@@ -2,6 +2,7 @@ const express = require("express")
 const dotenv = require("dotenv")
 const morgan = require("morgan")
 const path = require("path")
+const cookieParser = require("cookie-parser")
 const fileupload = require("express-fileupload")
 const errorHandler = require("./middleware/error")
 const bootcamps = require("./routes/bootcamps")
@@ -18,6 +19,8 @@ const auth = require("./routes/auth")
 
 const app = express()
 app.use(express.json())
+
+app.use(cookieParser())
 
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"))
