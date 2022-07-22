@@ -5,6 +5,9 @@ const path = require("path")
 const xss = require("xss-clean")
 const colors = require("colors")
 const helmet = require("helmet")
+const rateLimit = require("express-rate-limit")
+const hpp = require("hpp")
+const cors = require("cors")
 const mongoSanitize = require("express-mongo-sanitize")
 const cookieParser = require("cookie-parser")
 const fileupload = require("express-fileupload")
@@ -41,6 +44,18 @@ app.use(helmet())
 
 //Prevent XSS attacks
 app.use(xss())
+
+//Rate Limiting
+const limiter = rateLimit({
+  window: 1000 * 60 * 10,
+  max: 1,
+})
+
+app.use(limiter)
+app.use(hpp())
+
+// Enable CORS
+app.use(cors())
 
 app.use(express.static(path.join(__dirname, "public")))
 
