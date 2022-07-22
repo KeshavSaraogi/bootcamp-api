@@ -73,6 +73,19 @@ const getMe = asyncHandler(async (req, res, next) => {
   res.status(200).json({ success: true, data: user })
 })
 
+// description  -- Log Current User Out / Clear Cookie Data
+// route        -- GET /api/auth/logout
+// access       -- Private
+
+const logout = asyncHandler(async (req, res, next) => {
+  res.cookie("token", "none", {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  })
+
+  res.status(200).json({ success: true, data: {} })
+})
+
 // description  -- Update User Details
 // route        -- PUT /api/auth/updatedetails
 // access       -- Private
@@ -180,6 +193,7 @@ module.exports = {
   login: login,
   sendTokenResponse: sendTokenResponse,
   getMe: getMe,
+  logout: logout,
   forgotPassword: forgotPassword,
   resetPassword: resetPassword,
   updateDetails: updateDetails,
