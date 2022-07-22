@@ -48,7 +48,7 @@ const authorize = (...roles) => {
     if (roles.includes(req.user.role)) {
       return next(
         new ErrorResponse(
-          `User Role ${req.user.role} is not unauthorised access this route`
+          `User Role ${req.user.role} is not authorised access this route`
         ),
         403
       )
