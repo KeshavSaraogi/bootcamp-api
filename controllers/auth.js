@@ -73,6 +73,41 @@ const getMe = asyncHandler(async (req, res, next) => {
   res.status(200).json({ success: true, data: user })
 })
 
+// description  -- Update User Details
+// route        -- PUT /api/auth/updatedetails
+// access       -- Private
+
+const updateDetails = asyncHandler(async (req, res, next) => {
+  const fieldsToUpdate = {
+    name: req.body.name,
+    email: req.body.email,
+  }
+  const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
+    new: true,
+    runValidators: true,
+  })
+
+  res.status(200).json({ success: true, data: user })
+})
+
+// description  -- Update Password
+// route        -- PUT /api/auth/updatepassword
+// access       -- Private
+
+const updatePassword = asyncHandler(async (req, res, next) => {
+  const user = await (await User.findById(req.user.id)).select("+password")
+
+  //Check Current Password
+  if (!(await user.matchPassword(req.body.currentPassword))) {
+    return next(new ErrorResponse("Password Is Incorrect"), 404)
+  }
+
+  user.password = req.body.password
+  await user.save()
+
+  sendTokenResponse(user, 200, res)
+})
+
 // description  -- Forgot Password
 // route        -- GET /api/auth/forgotPassword
 // access       -- Private
@@ -147,4 +182,6 @@ module.exports = {
   getMe: getMe,
   forgotPassword: forgotPassword,
   resetPassword: resetPassword,
+  updateDetails: updateDetails,
+  updatePassword: updatePassword,
 }
